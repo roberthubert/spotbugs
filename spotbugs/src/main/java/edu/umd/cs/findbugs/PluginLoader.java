@@ -20,6 +20,7 @@
 package edu.umd.cs.findbugs;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -267,8 +268,8 @@ public class PluginLoader {
                 System.err.println(msg);
                 AnalysisContext.logError(msg);
 
-                for (Iterator<PluginLoader> i = partiallyInitialized.iterator(); i.hasNext();) {
-                    Plugin.removePlugin(i.next().loadedFromUri);
+                for (PluginLoader pluginLoader : partiallyInitialized) {
+                    Plugin.removePlugin(pluginLoader.loadedFromUri);
                 }
                 partiallyInitialized.clear();
             }
@@ -1191,7 +1192,7 @@ public class PluginLoader {
 
         Reader r = null;
         try {
-            r = UTF8.bufferedReader(findbugsXML_URL.openStream());
+            r = UTF8.bufferedReader(IO.openNonCachedStream(findbugsXML_URL));
             pluginDescriptor = reader.read(r);
         } catch (DocumentException e) {
             throw new PluginException("Couldn't parse \"" + findbugsXML_URL + "\" using " + reader.getClass().getName(), e);
@@ -1320,7 +1321,7 @@ public class PluginLoader {
         if (messageURL != null) {
             SAXReader reader = new SAXReader();
             try {
-                Reader stream = UTF8.bufferedReader(messageURL.openStream());
+                Reader stream = UTF8.bufferedReader(IO.openNonCachedStream(messageURL));
                 Document messageCollection;
                 try {
                     messageCollection = reader.read(stream);
@@ -1638,5 +1639,15 @@ public class PluginLoader {
             Util.closeSilently(r);
         }
     }
+
+    public void close() {
+        if (this.classLoader instanceof Closeable) {
+            IO.close((Closeable) this.classLoader);
+        }
+        if (this.classLoaderForResources instanceof Closeable) {
+            IO.close((Closeable) this.classLoaderForResources);
+        }
+    }
+
 }
 

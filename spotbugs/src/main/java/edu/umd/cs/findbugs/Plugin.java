@@ -692,6 +692,7 @@ public class Plugin {
             }
         }
         DetectorFactoryCollection.instance().unLoadPlugin(plugin);
+        plugin.getPluginLoader().close();
     }
 
 }

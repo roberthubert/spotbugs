@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -254,7 +255,7 @@ public class IO {
         InputStream i = null;
 
         try {
-            URLConnection uc = u.openConnection();
+            URLConnection uc = openNonCachedConnection(u);
             i = uc.getInputStream();
             int firstByte = i.read();
             i.close();
@@ -268,4 +269,17 @@ public class IO {
         }
 
     }
+
+    public static URLConnection openNonCachedConnection(URL u) throws IOException {
+        URLConnection uc = u.openConnection();
+        if (uc instanceof JarURLConnection) {
+            uc.setUseCaches(false);
+        }
+        return uc;
+    }
+
+    public static InputStream openNonCachedStream(URL u) throws IOException {
+        return openNonCachedConnection(u).getInputStream();
+    }
+
 }
